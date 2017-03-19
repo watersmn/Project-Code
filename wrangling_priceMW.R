@@ -16,7 +16,7 @@ w_price <- select(w_price, price, price_amazon, sale_online, datediff, PRICETYPE
 
 # Add new column to look for typos by looking for large difference in price and price_amazon)
 
-w_price <- mutate(w_price, "delta" = (price - price_amazon))
+w_price <- mutate(w_price, "delta" = (price_amazon - price))
 
 # Add new column to calculate % price difference between store price 
 # versus amazon price (Percentages will allow us to not neglect low cost
@@ -32,7 +32,7 @@ ggplot(w_price, aes(x = category, y = p_difference, col = category)) + geom_poin
 # < -100 
  
 # Create vector with values < 100 p_difference naming vector error
-error <- which(w_price$p_difference < -100)
+error <- which(w_price$p_difference > 100)
 
 # Remove values from dataset
 w_price2 <- w_price[-error,]
@@ -40,8 +40,12 @@ w_price2 <- w_price[-error,]
 # Plot new data set to see range of category and verify erronous have been removed
 ggplot(w_price2, aes(x = category, y = p_difference, col = category)) + geom_point()
 
-# Create data frame by category type
+# Create data frames by category type
 electronics_set <- filter(w_price2, category == "Electronics")
+home_app <- filter(w_price2, category == "Home and Appliances")
+mix <- filter(w_price2, category == "Mix")
+office <- filter(w_price2, category =="Office Products")
+pharm_health <- filter(w_price2, category == "Pharmacy and Health")
 
 # Plot histogram to view distribution 
 ggplot(electronics_set, aes(x = p_difference)) + geom_histogram(binwidth = 0.5)
@@ -52,12 +56,30 @@ grubbs.test(electronics_set$p_difference, type = 11, opposite = FALSE, two.sided
 # Output Grubbs test for two opposite outliers
 #data:  electronics_set$p_difference
 #G = 14.48300, U = 0.75709, p-value < 2.2e-16
-#alternative hypothesis: -79.0790790790791 and 0.98919989199892 are outliers
+#alternative hypothesis: 79.0790790790791 and -0.98919989199892 are outliers
 
 # Create vector to remove outliers and test Grubbs test again
-error2 <- which(electronics_set$p_difference > 0.98 | electronics_set$p_difference < -78)
+error2 <- which(electronics_set$p_difference < -0.98 | electronics_set$p_difference > 78)
 
 # Remove outliers
 electronics_set <- electronics_set[-error2,]
+
+# Plot histogram to view major ouliers
+ggplot(electronics_set, aes(x = p_difference)) + geom_histogram(binwidth = 0.5)
+
+# Lots of data above 1.5 that look erronous, need to remove
+
+error2 <- which(electronics_set$p_difference > 1.5)
+electronics_set <- electronics_set[-error2,]
+
+# Test for normality shows still abnormal 
+ad.test(electronics_set$p_difference)
+
+
+
+
+
+
+
 
 
